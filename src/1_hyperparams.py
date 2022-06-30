@@ -16,15 +16,16 @@ warnings.warn = warn
 
 nback = int(sys.argv[1])
 sex = sys.argv[2]
+foldersuffix = sys.argv[3]
 
 print(sex)
 
 
-train = pd.read_pickle('../../data/scaled_onlyhb/'+str(sex)+'_'+str(nback)+'_train.pkl')
+train = pd.read_pickle('../../data/scaled'+foldersuffix+'/'+str(sex)+'_'+str(nback)+'_train.pkl')
 X = train[train.columns[:-1]]
 y = train['Hb_deferral']
 
-params = {'C': [100, 10, 1, 0.1],
+params = {'C': [10, 1, 0.1],
           'gamma': [1, 0.1, 0.01, 0.001],
           'kernel': ['rbf']}
 
@@ -36,7 +37,7 @@ gridsearch = GridSearchCV(estimator=SVC(class_weight='balanced'),
                           verbose=2)
 gridsearch.fit(X, y)
 
-filename = '../results/hyperparams_onlyhb/output_hyperparams_' + str(sex) + '_' + str(nback) + '.pkl'
+filename = '../results/hyperparams'+foldersuffix+'/output_hyperparams_' + str(sex) + '_' + str(nback) + '.pkl'
 with open(filename, 'wb') as handle:
     pickle.dump(gridsearch.cv_results_, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

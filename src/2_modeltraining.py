@@ -6,41 +6,8 @@ import sys
 from sklearn.metrics import classification_report
 from sklearn.svm import SVC
 
-usevars = sys.argv[1]
+foldersuffix = sys.argv[1]
 nbacks = sys.argv[2:]
-
-if usevars == 'all':
-    hyp_male = {1: {'C': 1, 'gamma': 0.01, 'kernel': 'rbf'},
-                2: {'C': 10, 'gamma': 0.001, 'kernel': 'rbf'},
-                3: {'C': 0.1, 'gamma': 0.001, 'kernel': 'rbf'},
-                4: {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'}, 
-                5: {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'}}
-
-    hyp_female = {1: {'C': 0.1, 'gamma': 0.01, 'kernel': 'rbf'},
-                  2: {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'},
-                  3: {'C': 10, 'gamma': 0.001, 'kernel': 'rbf'},
-                  4: {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'},
-                  5: {'C': 1, 'gamma': 0.001, 'kernel': 'rbf'}}
-    
-elif usevars == 'onlyhb':
-    hyp_male = {1: {'C': 0.1, 'gamma': 0.1, 'kernel': 'rbf'},
-                2: {'C': 10, 'gamma': 0.01, 'kernel': 'rbf'},
-                3: {'C': 1, 'gamma': 0.01, 'kernel': 'rbf'},
-                4: {'C': 0.1, 'gamma': 0.001, 'kernel': 'rbf'}, 
-                5: {'C': 1, 'gamma': 0.01, 'kernel': 'rbf'}}
-
-    hyp_female = {1: {'C': 10, 'gamma': 0.01, 'kernel': 'rbf'},
-                  2: {'C': 1, 'gamma': 0.01, 'kernel': 'rbf'},
-                  3: {'C': 10, 'gamma': 0.01, 'kernel': 'rbf'},
-                  4: {'C': 0.1, 'gamma': 0.01, 'kernel': 'rbf'},
-                  5: {'C': 0.1, 'gamma': 0.001, 'kernel': 'rbf'}}   
-    
-else:
-    print('not a valid method, choose all or onlyhb')
-    exit()
-
-hyperparams = {'women': hyp_female,
-               'men': hyp_male}
 
 def train_svm(data, hyperparams):
     X = data[data.columns[:-1]]
@@ -63,17 +30,20 @@ def calc_accuracy(clf, data):
     
     return(classification_report(y, y_pred, output_dict=True))
 
-def do_svm(hyperparam_dict, nback):
+def do_svm(nback):
     results = []
     clfs = []
     for sex in ['men', 'women']:
         print('Sex:', sex, ' - ', datetime.datetime.now())
-        folder = 'scaled' if usevars == 'all' else 'scaled_onlyhb'
-        train = pd.read_pickle('../../data/'+folder+'/'+str(sex)+'_'+str(nback)+'_train.pkl')
-        test = pd.read_pickle('../../data/'+folder+'/'+str(sex)+'_'+str(nback)+'_test.pkl')
-
+        train = pd.read_pickle('../../data/scaled'+foldersuffix+'/'+str(sex)+'_'+str(nback)+'_train.pkl')
+        test = pd.read_pickle('../../data/scaled'+foldersuffix+'/'+str(sex)+'_'+str(nback)+'_test.pkl')
+        
+        hyps_all = pd.read_pickle('../results/hyperparams'+foldersuffix+'/output_hyperparams_'+sex+'_'+str(nback)+'.pkl')
+        hyps = hyps_all.loc[hyps.rank_test_score == 1, 'params']
+        hyps = hyps[hyps.index[0]]
+        
         print('  Training SVM - ', datetime.datetime.now())
-        clf = train_svm(train, hyperparam_dict[sex][nback])
+        clf = train_svm(train, hyps)
         
         print('  Calculating accuracy - ', datetime.datetime.now())
         cl_rep_train = calc_accuracy(clf, train)
@@ -84,9 +54,8 @@ def do_svm(hyperparam_dict, nback):
     return(results, clfs)
 
 for nback in nbacks:
-    res, clf = do_svm(hyperparams, int(nback))
-    folder = 'models' if usevars == 'all' else 'models_onlyhb'
-    filename1 = '../results/'+folder+'/res_' + str(nback) + '.pkl'
-    filename2 = '../results/'+folder+'/clf_' + str(nback) + '.sav'
+    res, clf = do_svm(int(nback))
+    filename1 = '../results/models'+foldersuffix+'/res_' + str(nback) + '.pkl'
+    filename2 = '../results/models'+foldersuffix+'/clf_' + str(nback) + '.sav'
     pickle.dump(res, open(filename1, 'wb'))
     pickle.dump(clf, open(filename2, 'wb'))

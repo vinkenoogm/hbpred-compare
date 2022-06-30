@@ -48,6 +48,8 @@ for timestep in range(-364, 371, 7):
 
     varname = 'Hbdef_pred_' + str(timestep)
     data_res[varname] = y_pred
+    if timestep == 0:
+        data_res = data_res.copy()
 
 print(data_res.head())
 path = '../../data/pred_timechange'+foldersuffix+'/'        

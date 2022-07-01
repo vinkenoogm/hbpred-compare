@@ -39,7 +39,8 @@ def do_svm(nback):
         test = pd.read_pickle('../../data/scaled'+foldersuffix+'/'+str(sex)+'_'+str(nback)+'_test.pkl')
         
         hyps_all = pd.read_pickle('../results/hyperparams'+foldersuffix+'/output_hyperparams_'+sex+'_'+str(nback)+'.pkl')
-        hyps = hyps_all.loc[hyps.rank_test_score == 1, 'params']
+        hyps_all = pd.DataFrame.from_dict(hyps_all)
+        hyps = hyps_all.loc[hyps_all.rank_test_score == 1, 'params']
         hyps = hyps[hyps.index[0]]
         
         print('  Training SVM - ', datetime.datetime.now())

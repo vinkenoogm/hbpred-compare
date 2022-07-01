@@ -13,9 +13,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 sex = sys.argv[1]
-n = int(sys.argv[2])
-nback = sys.argv[3]
-foldersuffix = sys.argv[4]
+nback = sys.argv[2]
+foldersuffix = sys.argv[3]
+n = sys.argv[4]
 
 def calc_shap(nback, sex, n=100):
     filename = '../results/models'+foldersuffix+'/clf_' + str(nback) + '.sav'
@@ -27,7 +27,7 @@ def calc_shap(nback, sex, n=100):
     X_val = val[val.columns[:-1]]
     X_shap = shap.sample(X_val, n)
     explainer = shap.KernelExplainer(clf_s.predict, X_shap)
-    shapvals = explainer.shap_values(X_shap)
+    shapvals = explainer.shap_values(X_shap, nsamples=500)
         
     path = '../results/shap'+foldersuffix+'/'
     filename1 = 'Xshap_' + sex + '_' + str(nback) + '_' + str(n) + '.pkl'
@@ -36,6 +36,5 @@ def calc_shap(nback, sex, n=100):
     pickle.dump(X_shap, open(path+filename1, 'wb'))
     pickle.dump(shapvals, open(path+filename2, 'wb'))
         
-
 print('Calculating shap values for ', sex, ' nback', nback, '( N =',  n, ') starting at', datetime.datetime.now())
-calc_shap(nback, sex, n)
+calc_shap(nback, sex, int(n))

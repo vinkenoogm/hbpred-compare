@@ -12,18 +12,18 @@ from sklearn.metrics import precision_recall_curve, average_precision_score
 data_path = Path('../data')
 results_path = Path('../testresults')
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--foldersuffix', type=str, default='',
-                    help='[str] optional suffix indicating non-default run')
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--foldersuffix', type=str, default='',
+                        help='[str] optional suffix indicating non-default run')
+    args = parser.parse_args()
+    return args
 
-foldersuffix = args.foldersuffix
-
-def pretty_results(filenames, foldersuffix=''):
+def pretty_results(filenames, args):
     reslist = []
     for index1, filename in enumerate(filenames):
         _, sex, nback = filename.split('_')
-        res = pd.read_pickle(results_path / f'models{foldersuffix}' / f'{filename}.pkl')
+        res = pd.read_pickle(results_path / f'models{args.foldersuffix}' / f'{filename}.pkl')
         for index2, cr in enumerate(res):
             traintest = ['train', 'test'][index2 % 2]
             reslist.append([int(nback), traintest, sex, cr['0']['precision'], cr['0']['recall'], cr['0']['support'],
@@ -46,13 +46,13 @@ def get_scores(res_df):
     
     return res_df
  
-def plot_precision_recall(res_df, measure, ylim, ylab, save=False):
+def plot_precision_recall(res_df, measure, ylim, ylab, args, save=False):
     pl_df = res_df.groupby(['sex', 'traintest'])
 
     fig, ax = plt.subplots(1, 2, figsize=(12, 4))
 
     for name, group in pl_df:
-        y = 0 if name[0] == 'F' else 1
+        y = 0 if name[0] == 'women' else 1
         off = -0.2 if name[1] == 'train' else 0.2
         hatch = '/' if name[1] == 'test' else ''
         ax[y].bar(group.nback + off, group[measure], label=name[1], width=0.4, edgecolor='black', hatch=hatch)
@@ -75,52 +75,12 @@ def plot_precision_recall(res_df, measure, ylim, ylab, save=False):
     if save:
         plot_path = results_path / 'plots_performance'
         plot_path.mkdir(parents=True, exist_ok=True)
-        plt.savefig(plot_path / f'{save}{foldersuffix}.png')
+        plt.savefig(plot_path / f'{save}{args.foldersuffix}.png')
     
-def plot_precision_recall_comp(res_df, measure, ylim, ylab, save=False):
-    pl_df = res_df.loc[res_df['traintest'] == 'test'].groupby(['sex', 'vars'])
-
-    fig, ax = plt.subplots(1, 2, figsize=(12, 4))
-
-    for name, group in pl_df:
-        y = 0 if name[0] == 'F' else 1
-        off = -0.2 if name[1] == 'all' else 0.2
-        hatch = '/' if name[1] == 'all' else ''
-        colr = 'deepskyblue' if name[1] == 'all' else 'rebeccapurple'
-        ax[y].bar(group.nback + off, group[measure], label=name[1], width=0.4, edgecolor='black', 
-                  hatch=hatch, color=colr)
-        ax[y].set_ylim(ylim)
-        ax[y].set_xticks(group.nback)
-        ax[y].set_xticklabels(['SVM-1','SVM-2','SVM-3','SVM-4','SVM-5'], size='large')
-        ax[y].set_ylabel(ylab, size='large')
-
-    legloc = 'upper right' if measure == 'low_precision' else 'lower right'
-    legbox = (1, 1) if measure == 'low_precision' else (1, 0)
-    ax[0].legend(labels=['all', 'only Hb'], bbox_to_anchor=legbox, loc=legloc, title='Predictor\nvariables')
-    ax[1].legend(labels=['all', 'only Hb'], bbox_to_anchor=legbox, loc=legloc, title='Predictor\nvariables')
-    
-    ax[0].set_title('Women')
-    ax[1].set_title('Men')
-
-    fig.tight_layout()
-    
-    if save:
-        plot_path = results_path / 'plots_performance'
-        plot_path.mkdir(parents=True, exist_ok=True)
-        plt.savefig(plot_path / f'{save}{foldersuffix}.png')
-
-res_df = pretty_results([f'res_{sex}_{nback}' for sex in ['men','women'] for nback in range(1,6)], foldersuffix=foldersuffix)
-res_df = get_scores(res_df)
-
-plot_precision_recall(res_df, 'ok_precision', (0.95, 1), 'Precision\nclass no deferral', save='ok_precision')
-plot_precision_recall(res_df, 'ok_recall', (0, 1), 'Recall\nclass no deferral', save='ok_recall')
-plot_precision_recall(res_df, 'low_precision', (0, 0.15), 'Precision\nclass deferral', 'low_precision')
-plot_precision_recall(res_df, 'low_recall', (0, 1), 'Recall\nclass deferral', save='low_recall')
-
-def load_probas(sexes=('men', 'women'), nbacks=range(1, 6)):
+def load_probas(args, sexes=('men', 'women'), nbacks=range(1, 6)):
     dfs = []
     for sex, nback in product(sexes, nbacks):
-        df = pd.read_pickle(results_path / f'probas{foldersuffix}' / f'proba_{sex}_{nback}.pkl')
+        df = pd.read_pickle(results_path / f'probas{args.foldersuffix}' / f'proba_{sex}_{nback}.pkl')
         df['sex'] = sex
         df['nback'] = nback
         dfs.append(df)
@@ -163,26 +123,33 @@ def plot_prs(probas, def_f, def_m, save=False):
         plot_path.mkdir(parents=True, exist_ok=True)
         plt.savefig(plot_path / f'{save}.png')
     
-sexes = ['men', 'women']
-nbacks = range(1, 6)
+def main(args):
+    res_df = pretty_results([f'res_{sex}_{nback}' for sex in ['men','women'] for nback in range(1,6)], args)
+    res_df = get_scores(res_df)
 
-for sex, nback in product(sexes, nbacks):
-    print(datetime.datetime.now(), 'Starting', nback, sex)
+    plot_precision_recall(res_df, 'ok_precision', (0.95, 1), 'Precision\nclass no deferral', args, save='ok_precision')
+    plot_precision_recall(res_df, 'ok_recall', (0, 1), 'Recall\nclass no deferral', args, save='ok_recall')
+    plot_precision_recall(res_df, 'low_precision', (0, 0.15), 'Precision\nclass deferral', args, save='low_precision')
+    plot_precision_recall(res_df, 'low_recall', (0, 1), 'Recall\nclass deferral', args, save='low_recall')
     
-    clf = pickle.load(open(results_path / f'models{foldersuffix}/clf_{sex}_{nback}.sav', 'rb'))
-    test = pd.read_pickle(data_path / f'scaled{foldersuffix}/{sex}_{nback}_test.pkl')
-    y_true = test[test.columns[-1:]].copy()
-    y_pred = clf.predict_proba(test[test.columns[:-1]])
-    y_true[['prob_low', 'prob_ok']] = y_pred
-    
-    output_path = results_path / f'probas{foldersuffix}'
-    output_path.mkdir(parents=True, exist_ok=True)
-    pickle.dump(y_true, open(output_path / f'proba_{sex}_{nback}.pkl', 'wb'))
-    
-proba_m = pd.read_pickle(results_path / f'probas{foldersuffix}/proba_men_1.pkl')
-proba_f = pd.read_pickle(results_path / f'probas{foldersuffix}/proba_women_1.pkl')
-def_m = 1-np.mean(proba_m.HbOK)
-def_f = 1-np.mean(proba_f.HbOK)
+    sexes = ['men', 'women']
+    nbacks = range(1, 6)
 
-probas = load_probas()
-plot_prs(probas, def_f, def_m, save=f'PR_curve{foldersuffix}')
+    for sex, nback in product(sexes, nbacks):
+        clf = pickle.load(open(results_path / f'models{args.foldersuffix}/clf_{sex}_{nback}.sav', 'rb'))
+        test = pd.read_pickle(data_path / f'scaled{args.foldersuffix}/{sex}_{nback}_test.pkl')
+        y_true = test[test.columns[-1:]].copy()
+        y_pred = clf.predict_proba(test[test.columns[:-1]])
+        y_true[['prob_low', 'prob_ok']] = y_pred
+
+        output_path = results_path / f'probas{args.foldersuffix}'
+        output_path.mkdir(parents=True, exist_ok=True)
+        pickle.dump(y_true, open(output_path / f'proba_{sex}_{nback}.pkl', 'wb'))
+    
+    proba_m = pd.read_pickle(results_path / f'probas{args.foldersuffix}/proba_men_1.pkl')
+    proba_f = pd.read_pickle(results_path / f'probas{args.foldersuffix}/proba_women_1.pkl')
+    def_m = 1-np.mean(proba_m.HbOK)
+    def_f = 1-np.mean(proba_f.HbOK)
+
+    probas = load_probas(args)
+    plot_prs(probas, def_f, def_m, save=f'PR_curve{args.foldersuffix}')

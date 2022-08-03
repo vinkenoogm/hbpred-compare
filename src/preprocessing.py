@@ -9,32 +9,16 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 # Setting paths
-data_path = Path('../data/')
-results_path = Path('../testresults/')
+data_path = Path('../../data/')
+results_path = Path('../results/')
 
-# # Load raw data
-# data_last = pd.read_csv(data_path / 'lastdon.csv', low_memory=False)
-# data_all = pd.read_csv(data_path / 'vdonationc.csv', low_memory=False)
-# data_raw = data_all.merge(data_last[['vdonor', 'height', 'weight', 'smoking', 'bmi', 
-#                                      'snp_17_58358769', 'snp_6_32617727', 'snp_15_45095352',
-#                                      'snp_1_169549811', 'prs_anemia', 'prs_ferritin', 'prs_hemoglobin']], 
-#                           how='inner',
-#                           on='vdonor')
-
-# # Drop unused variables, add date/month/year variables for train/test selection later
-# data = data_raw.copy().drop(columns=['Unnamed: 0', 'zip', 'city', 'site', 'aborh'])
-# data['date'] = pd.to_datetime(data['date'])
-# data['year'] = data['date'].dt.year
-# data['month'] = data['date'].dt.month
-# data['successful_don'] = data['donat_phleb'] == 'K'
-# data = data.sort_values(['vdonor', 'date']).reset_index(drop=True)
-
-# # Keep only successful whole-blood donations and Hb deferrals
-# data = data.loc[(data.donat_phleb == 'K') | ((data.donat_phleb == '*') & (data.Hb_deferral == 1)), ]
-# data = data.drop(columns=['status','donat_phleb'])
-
-# # Save
-# data.to_pickle(data_path / 'alldata.pkl')
+def add_variables(df):
+    df['date'] = pd.to_datetime(df['date'])
+    df['year'] = df['date'].dt.year
+    df['month'] = df['date'].dt.month
+    df['successful_don'] = df['Hb_deferral'] == 0
+    df = df.sort_values(['vdonor', 'date']).reset_index(drop=True)
+    return df
 
 def add_prev_hb_time(df, number):
     colnames = [f'HbPrev{str(number)}', f'DaysSinceHb{str(number)}']
@@ -53,60 +37,32 @@ def add_numdon(df):
     df = df.set_index('index')
     return df
 
-data = pd.read_csv(data_path / 'fakedata.csv')
+def split_train_test(df):
+    # Splitting into train and test sets based on date (last year is test set)
+    var = ['vdonor', 'date', 'sex', 'year', 'age', 'month', 'NumDon', 'smoking', 'height', 'weight', 'bmi', 
+           'snp_17_58358769', 'snp_6_32617727', 'snp_15_45095352', 'snp_1_169549811', 'prs_anemia', 'prs_ferritin',
+           'prs_hemoglobin']
+    for n in range(1, 6):
+        var.extend([f'HbPrev{n}', f'DaysSinceHb{n}'])
+    var.append('HbOK')
 
-data['date'] = pd.to_datetime(data['date'])
-data['year'] = data['date'].dt.year
-data['month'] = data['date'].dt.month
-data['successful_don'] = data['Hb_deferral'] == 0
-data = data.sort_values(['vdonor', 'date']).reset_index(drop=True)
+    df['smoking'] = df['smoking'].astype(int)
 
-# We will use donations from >2015, first select 2 more years to calculate donations in last 24 months
-data = data.loc[data.year > 2013, ].copy()
+    train_men = df.loc[(df.sex == 'Men') & (df.date <= '2019-05-01'), var]
+    train_men = train_men[train_men.columns[4:]]
+    train_women = df.loc[(df.sex == 'Women') & (df.date <= '2019-05-01'), var]
+    train_women = train_women[train_women.columns[4:]]
 
-# Add NumDon variable, then take donations >2015
-df = add_numdon(data)
-df = df.loc[df.year > 2015, ].copy()
+    test_men = df.loc[(df.sex == 'Men') & (df.date > '2019-05-01'), var]
+    test_men = test_men[test_men.columns[4:]]
+    test_women = df.loc[(df.sex == 'Women') & (df.date > '2019-05-01'), var]
+    test_women = test_women[test_women.columns[4:]]
+    
+    return train_men, test_men, train_women, test_women
 
-# Add remaining predictor variables
-df_1 = df.groupby('vdonor').apply(add_prev_hb_time, number=1)
-df_2 = df_1.groupby('vdonor').apply(add_prev_hb_time, number=2)
-df_3 = df_2.groupby('vdonor').apply(add_prev_hb_time, number=3)
-df_4 = df_3.groupby('vdonor').apply(add_prev_hb_time, number=4)
-df_5 = df_4.groupby('vdonor').apply(add_prev_hb_time, number=5)
-
-# Save
-df_5.to_pickle(data_path / 'df_2016_2020.pkl')
-
-# Load
-df = pd.read_pickle(data_path / 'df_2016_2020.pkl')
-df['HbOK'] = (df['Hb_deferral'] - 1) * -1
-
-# Splitting into train and test sets based on date (last year is test set)
-var = ['vdonor', 'date', 'sex', 'year', 'age', 'month', 'NumDon', 'smoking', 'height', 'weight', 'bmi', 
-       'snp_17_58358769', 'snp_6_32617727', 'snp_15_45095352', 'snp_1_169549811', 'prs_anemia', 'prs_ferritin',
-       'prs_hemoglobin']
-for n in range(1, 6):
-    var.extend([f'HbPrev{n}', f'DaysSinceHb{n}'])
-var.append('HbOK')
-
-df['smoking'] = df['smoking'].astype(int)
-
-train_men = df.loc[(df.sex == 'Men') & (df.date <= '2019-05-01'), var]
-train_men = train_men[train_men.columns[4:]]
-train_women = df.loc[(df.sex == 'Women') & (df.date <= '2019-05-01'), var]
-train_women = train_women[train_women.columns[4:]]
-
-test_men = df.loc[(df.sex == 'Men') & (df.date > '2019-05-01'), var]
-test_men = test_men[test_men.columns[4:]]
-test_women = df.loc[(df.sex == 'Women') & (df.date > '2019-05-01'), var]
-test_women = test_women[test_women.columns[4:]]
-
-# Scaling data based on train set, save scaled train+test
 def save_scaled_train_test_sets(train_men, test_men, train_women, test_women, predvars, foldersuffix=''):  
     for nback in range(1, 6):
         selvars = predvars.copy()
-        print(nback, selvars)
         for n in range(1, nback+1):
             selvars.extend([f'HbPrev{n}', f'DaysSinceHb{n}'])
         selvars.append('HbOK')
@@ -139,14 +95,41 @@ def save_scaled_train_test_sets(train_men, test_men, train_women, test_women, pr
         test_men_sub.to_pickle(scaled_folder / f'men_{nback}_test.pkl')
         test_women_sub.to_pickle(scaled_folder / f'women_{nback}_test.pkl')
 
-# Scaled train/test sets for Hb variables + genetic data
-save_scaled_train_test_sets(train_men, test_men, train_women, test_women, 
-                            predvars=['age', 'month', 'NumDon', 
-                                      'snp_17_58358769', 'snp_6_32617727', 'snp_15_45095352', 
-                                      'snp_1_169549811', 'prs_anemia', 'prs_ferritin', 'prs_hemoglobin'], 
-                            foldersuffix='')
+        
+def main():
+    data = pd.read_pickle(data_path / 'alldata.pkl')
+    df = add_variables(data)
+    
+    # We will use donations from >2015, first select 2 more years to calculate donations in last 24 months
+    df = df.loc[df.year > 2013, ].copy()    
+    # Add NumDon variable, then take donations >2015
+    df = add_numdon(df)
+    df = df.loc[df.year > 2015, ].copy()
 
-# Scaled train/test sets for Hb variables only
-save_scaled_train_test_sets(train_men, test_men, train_women, test_women, 
-                            predvars=['age', 'month', 'NumDon'], 
-                            foldersuffix='_hbonly')
+    # Add remaining predictor variables
+    df_1 = df.groupby('vdonor').apply(add_prev_hb_time, number=1)
+    df_2 = df_1.groupby('vdonor').apply(add_prev_hb_time, number=2)
+    df_3 = df_2.groupby('vdonor').apply(add_prev_hb_time, number=3)
+    df_4 = df_3.groupby('vdonor').apply(add_prev_hb_time, number=4)
+    df_5 = df_4.groupby('vdonor').apply(add_prev_hb_time, number=5)
+
+    df_5.to_pickle(data_path / 'df_2016_2020.pkl')
+    df = pd.read_pickle(data_path / 'df_2016_2020.pkl')
+    df['HbOK'] = (df['Hb_deferral'] - 1) * -1
+    
+    train_men, test_men, train_women, test_women = split_train_test(df)
+
+    # Scaled train/test sets for Hb variables + genetic data
+    save_scaled_train_test_sets(train_men, test_men, train_women, test_women, 
+                                predvars=['age', 'month', 'NumDon', 
+                                          'snp_17_58358769', 'snp_6_32617727', 'snp_15_45095352', 
+                                          'snp_1_169549811', 'prs_anemia', 'prs_ferritin', 'prs_hemoglobin'], 
+                                foldersuffix='')
+
+    # Scaled train/test sets for Hb variables only
+    save_scaled_train_test_sets(train_men, test_men, train_women, test_women, 
+                                predvars=['age', 'month', 'NumDon'], 
+                                foldersuffix='_hbonly')
+    
+if __name__ == '__main__':
+    main()

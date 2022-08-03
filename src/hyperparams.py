@@ -12,8 +12,8 @@ from sklearn.exceptions import UndefinedMetricWarning
 
 warnings.filterwarnings('ignore') # This suppresses the sklearn 'UndefinedMetricWarning' that occurs when one class is not predicted in a combination of hyperparameters
 
-data_path = Path('../data')
-results_path = Path('../testresults')
+data_path = Path('../../data')
+results_path = Path('../results')
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -33,8 +33,8 @@ def prep_xy(args):
     return X, y
 
 def tune_hyperparams(X, y):
-    params = {'C': [1, 0.1],
-              'gamma': [1, 0.1],
+    params = {'C': [10, 1, 0.1, 0.01],
+              'gamma': [1, 0.1, 0.01, 0.001],
               'kernel': ['rbf']}
 
     gridsearch = GridSearchCV(estimator=SVC(class_weight='balanced'),
@@ -58,7 +58,7 @@ def main(args):
     X, y = prep_xy(args)
     gs = tune_hyperparams(X, y)
     save_results(gs, args)
-    print(f'    Hyperparameters tuned and saved for SVM-{args.nback}, {args.sex}')
+    print(f'    Hyperparameters tuned and saved for SVM-{args.nback}, {args.sex}, {args.foldersuffix}')
     
 if __name__ == '__main__':
     args = parse_args()

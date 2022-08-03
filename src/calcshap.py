@@ -8,8 +8,8 @@ import pandas as pd
 import shap
 
 warnings.filterwarnings('ignore')
-data_path = Path('../data')
-results_path = Path('../testresults')
+data_path = Path('../../data')
+results_path = Path('../results')
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -33,7 +33,7 @@ def calc_shap(args):
     X_test = test[test.columns[:-1]]
     X_shap = shap.sample(X_test, args.n)
     explainer = shap.KernelExplainer(clf.predict, X_shap)
-    shapvals = explainer.shap_values(X_shap, nsamples=100)
+    shapvals = explainer.shap_values(X_shap)
     
     output_path = results_path / f'shap{args.foldersuffix}/'
     output_path.mkdir(parents=True, exist_ok=True)
@@ -45,7 +45,7 @@ def calc_shap(args):
 
 def main(args):
     calc_shap(args)
-    print(f'    SHAP values for SVM-{args.nback}, {args.sex} calculated and saved')
+    print(f'    SHAP values for SVM-{args.nback}, {args.sex}, {args.foldersuffix} calculated and saved')
     
 if __name__ == '__main__':
     args = parse_args()

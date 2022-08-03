@@ -64,7 +64,7 @@ def main(args):
     output_path.mkdir(parents=True, exist_ok=True)
     
     data_res.to_pickle(output_path / f'data_res_{args.sex}_{args.nback}.pkl')
-    print(f'    Predictions for SVM-{args.nback}, {args.sex} calculated and saved')
+    print(f'    Predictions for SVM-{args.nback}, {args.sex}, {args.foldersuffix} calculated and saved')
 
     
 if __name__ == '__main__':

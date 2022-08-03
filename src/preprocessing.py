@@ -98,6 +98,9 @@ def save_scaled_train_test_sets(train_men, test_men, train_women, test_women, pr
         
 def main():
     data = pd.read_pickle(data_path / 'alldata.pkl')
+    ## TO USE FAKE TESTING DATA: put fakedata.csv in data folder, comment previous line out
+    ## uncomment following line:
+    # data = pd.read_csv(data_path / 'fakedata.csv')
     df = add_variables(data)
     
     # We will use donations from >2015, first select 2 more years to calculate donations in last 24 months

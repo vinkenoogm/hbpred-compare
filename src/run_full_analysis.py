@@ -119,8 +119,8 @@ def main():
         print(f'Results saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
 
 if __name__ == '__main__':
-    preprocess = False
-    hyperparam_tuning = False
+    preprocess = True
+    hyperparam_tuning = True
     model_training = True
     model_performance = True
     shap_values = True

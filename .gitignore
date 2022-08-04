@@ -2,3 +2,5 @@
 /src/__pycache__
 /results/shap*
 /results/plots_shap/old*
+/data
+/testresults

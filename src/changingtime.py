@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 data_path = Path('../../data')
-result_path = Path('../testresults')
+result_path = Path('../results')
 
 def parse_args():
     parser = argparse.ArgumentParser()

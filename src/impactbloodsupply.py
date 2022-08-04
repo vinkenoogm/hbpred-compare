@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
-data_path = Path('../data')
+data_path = Path('../../data')
 results_path = Path('../testresults')
 
 def parse_args():

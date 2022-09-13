@@ -1,9 +1,11 @@
-import preprocessing
+import preprocessing_netherlands
+# import preprocessing_finland
 import hyperparams
 import modeltraining
 import modelperformance
 import calcshap
 import plotshap
+import anonymizeshap
 import changingtime
 import impactbloodsupply
 
@@ -36,7 +38,8 @@ def main():
         # Preprocessing
         print(f'Preprocessing data...')
         
-        preprocessing.main()
+        preprocessing_netherlands.main()
+        # preprocessing_finland.main()
         
         now = datetime.now().replace(microsecond=0)
         print(f'Done preprocessing. \n--Time elapsed: {now - firststart} \n--Total time elapsed: {now - firststart}\n')
@@ -95,6 +98,17 @@ def main():
 
         now = datetime.now().replace(microsecond=0)
         print(f'All SHAP plots saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
+        
+    if shap_anon:
+        # Anonymizing SHAP values
+        start = datetime.now().replace(microsecond=0)
+        print(f'Anonymizing SHAP values for all models. \n--Started at: {start}')
+
+        with Pool(len(list_args_shap)) as pool:
+            results = pool.map(anonymizeshap.main, list_args_shap)
+
+        now = datetime.now().replace(microsecond=0)
+        print(f'SHAP values for all models are anonymized and saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
 
     if changing_time:
         # Predictions at different timepoints
@@ -125,6 +139,7 @@ if __name__ == '__main__':
     model_performance = True
     shap_values = True
     shap_plots = True
+    shap_anon = True
     changing_time = True
     impact_bloodsupply = True
     main()

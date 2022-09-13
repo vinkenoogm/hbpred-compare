@@ -13,7 +13,7 @@ from sklearn.exceptions import UndefinedMetricWarning
 warnings.filterwarnings('ignore') # This suppresses the sklearn 'UndefinedMetricWarning' that occurs when one class is not predicted in a combination of hyperparameters
 
 data_path = Path('../../data')
-results_path = Path('../results')
+results_path = Path('../../results/netherlands')
 
 def parse_args():
     parser = argparse.ArgumentParser()

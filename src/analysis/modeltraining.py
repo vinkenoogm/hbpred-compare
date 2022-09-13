@@ -8,7 +8,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.svm import SVC
 
 data_path = Path('../../data')
-results_path = Path('../results')
+results_path = Path('../../results/netherlands')
 
 def parse_args():
     parser = argparse.ArgumentParser()

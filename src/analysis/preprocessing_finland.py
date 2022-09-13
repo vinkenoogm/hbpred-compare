@@ -9,8 +9,8 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 # Setting paths
-data_path = Path('../../data/')
-results_path = Path('../results/')
+data_path = Path('../../data')
+results_path = Path('../../results/finland')
 
 def add_variables(df):
     df['date'] = pd.to_datetime(df['date'])

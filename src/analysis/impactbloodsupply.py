@@ -10,7 +10,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
 data_path = Path('../../data')
-results_path = Path('../testresults')
+results_path = Path('../../results/netherlands')
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -133,10 +133,12 @@ def main(args):
     output_path = results_path / f'pred_timechange{args.foldersuffix}'
     output_path.mkdir(parents=True, exist_ok=True)
 
-    df_f = df_f.drop(columns=list(df_f.columns[:10]) + list(df_f.columns[12:20])).reset_index()
+    hbpredcols = ['HbPrev1', 'DaysSinceHb1'] + [col for col in df_f if col.startswith('HbOK')] + ['first_possible_donation', 'first_possible_invite', 'first_pos_pred']
+
+    df_f = df_f[hbpredcols].copy()
     df_f.to_pickle(output_path / 'predictions_women.pkl')
 
-    df_m = df_m.drop(columns=list(df_m.columns[:10]) + list(df_m.columns[12:20])).reset_index()
+    df_m = df_m[hbpredcols].copy()
     df_m.to_pickle(output_path / 'predictions_men.pkl')
     
     plot_newinvites(args, df_f, df_m, save='invites_datechange')

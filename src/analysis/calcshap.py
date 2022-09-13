@@ -9,7 +9,7 @@ import shap
 
 warnings.filterwarnings('ignore')
 data_path = Path('../../data')
-results_path = Path('../results')
+results_path = Path('../../results/netherlands')
 
 def parse_args():
     parser = argparse.ArgumentParser()

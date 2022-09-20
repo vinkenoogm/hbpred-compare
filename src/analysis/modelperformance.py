@@ -4,6 +4,7 @@ from itertools import product
 import pickle
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -26,8 +27,9 @@ def pretty_results(filenames, args):
         res = pd.read_pickle(results_path / f'models{args.foldersuffix}' / f'{filename}.pkl')
         for index2, cr in enumerate(res):
             traintest = ['train', 'test'][index2 % 2]
-            reslist.append([int(nback), traintest, sex, cr['0']['precision'], cr['0']['recall'], cr['0']['support'],
-                            cr['1']['precision'], cr['1']['recall'], cr['1']['support']])
+            reslist.append([int(nback), traintest, sex, 
+                            cr['1']['precision'], cr['1']['recall'], cr['1']['support'],
+                            cr['0']['precision'], cr['0']['recall'], cr['0']['support']])
     res = pd.DataFrame(reslist).set_axis(['nback', 'traintest', 'sex', 'ok_precision', 'ok_recall', 'ok_support',
                                           'low_precision', 'low_recall', 'low_support'], axis=1)
     return res
@@ -50,12 +52,14 @@ def plot_precision_recall(res_df, measure, ylim, ylab, args, save=False):
     pl_df = res_df.groupby(['sex', 'traintest'])
 
     fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+    cmap = matplotlib.cm.get_cmap('tab20')
 
     for name, group in pl_df:
         y = 0 if name[0] == 'women' else 1
         off = -0.2 if name[1] == 'train' else 0.2
         hatch = '/' if name[1] == 'test' else ''
-        ax[y].bar(group.nback + off, group[measure], label=name[1], width=0.4, edgecolor='black', hatch=hatch)
+        color = cmap(0) if name[1] == 'train' else cmap(2)
+        ax[y].bar(group.nback + off, group[measure], label=name[1], width=0.4, edgecolor='black', hatch=hatch, color=color)
         ax[y].set_ylim(ylim)
         ax[y].set_xticks(group.nback)
         ax[y].set_xticklabels(['SVM-1','SVM-2','SVM-3','SVM-4','SVM-5'], size='large')
@@ -63,14 +67,14 @@ def plot_precision_recall(res_df, measure, ylim, ylab, args, save=False):
     
     legloc = 'upper right' if measure == 'low_precision' else 'lower right'
     legbox = (1, 1) if measure == 'low_precision' else (1, 0)
-    ax[0].legend(labels=['train', 'test'], bbox_to_anchor=legbox, loc=legloc, title='Dataset')
-    ax[1].legend(labels=['train', 'test'], bbox_to_anchor=legbox, loc=legloc, title='Dataset')
+    handles, labels = plt.gca().get_legend_handles_labels()
+    ax[0].legend([handles[i] for i in [1, 0]], [labels[i] for i in [1, 0]], bbox_to_anchor=legbox, loc=legloc, title='Dataset')
+    ax[1].legend([handles[i] for i in [1, 0]], [labels[i] for i in [1, 0]], bbox_to_anchor=legbox, loc=legloc, title='Dataset')
     
     ax[0].set_title('Women')
     ax[1].set_title('Men')
 
     fig.tight_layout()
-    plt.set_cmap('tab20')
     
     if save:
         plot_path = results_path / 'plots_performance'
@@ -99,8 +103,8 @@ def plot_prs(probas, def_f, def_m, save=False):
             aupr_0 = round(average_precision_score(group.HbOK, group.prob_low, pos_label=0), 3)
             aupr_1 = round(average_precision_score(group.HbOK, group.prob_ok, pos_label=1), 3)
 
-            ax[1,x].plot(recall_0, precision_0, label='SVM-'+str(key)+', AUPR: '+str(aupr_0))
-            ax[0,x].plot(recall_1, precision_1, label='SVM-'+str(key)+', AUPR: '+str(aupr_1))
+            ax[0,x].plot(recall_0, precision_0, label='SVM-'+str(key)+', AUPR: '+str(aupr_0))
+            ax[1,x].plot(recall_1, precision_1, label='SVM-'+str(key)+', AUPR: '+str(aupr_1))
         
         ax[0,x].set_title('PR-curve class deferral - ' + ['men', 'women'][x])
         ax[0,x].set_xlabel('Recall')

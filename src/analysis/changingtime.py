@@ -42,6 +42,8 @@ def main(args):
     data_res['HbOK_pred'] = y_pred_first
 
     timecols = []
+    if args.foldersuffix == '':
+        timecols.extend(['DaysSinceFer'])
     for n in range(1, args.nback+1):
         timecols.extend(['DaysSinceHb'+str(n)])
 

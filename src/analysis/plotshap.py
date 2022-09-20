@@ -7,8 +7,9 @@ from pyprojroot import here
 import shap
 
 import matplotlib.pyplot as plt
+import numpy as np
 
-results_path = Path('../../results/netherlands/shap/')
+results_path = Path('../../results/netherlands/')
 plot_path = Path('../../results/netherlands/plots_shap/')
 plot_path.mkdir(parents=True, exist_ok=True)
 
@@ -26,14 +27,18 @@ def parse_args():
     return args
 
 def main(args):
-    filename1 = f'Xshap_{args.sex}_{args.nback}_{args.n}.pkl'
-    filename2 = f'shapvals_{args.sex}_{args.nback}_{args.n}.pkl'
+    filename = f'shapdf_{args.sex}_{args.nback}.pkl'
+    shapdf = pickle.load(open(results_path / f'anonshap{args.foldersuffix}' / filename, 'rb'))
+        
+    df_shap = pd.DataFrame()
+    df_x = pd.DataFrame()
 
-    X_test = pickle.load(open(results_path / filename1, 'rb'))
-    shapvals = pickle.load(open(results_path / filename2, 'rb'))
+    for varname in np.unique(shapdf['variable']):
+        df_shap[varname] = list(shapdf.loc[shapdf['variable'] == varname, 'shap'])
+        df_x[varname] = list(shapdf.loc[shapdf['variable'] == varname, 'value'])
 
     plt.figure(figsize=(8, 8))
-    fig = shap.summary_plot(-1*shapvals, X_test, max_display=50, show=False)
+    fig = shap.summary_plot(df_shap.to_numpy(), df_x, max_display=50, show=False)
     plt.gcf().axes[-1].set_aspect(100)
     plt.gcf().axes[-1].set_box_aspect(100)
     plt.title(f'SHAP values for SVM-{args.nback}, {args.sex}')

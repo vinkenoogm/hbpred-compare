@@ -1,5 +1,7 @@
 /src/.ipynb_checkpoints
 /src/__pycache__
+/src/analysis/.ipynb_checkpoints
+/src/analysis/__pycache__
 /results/shap*
 /results/plots_shap/old*
 /data

@@ -1,3 +1,0 @@
-Median donation interval for men goes from 92.0 to 63.0 days.
-Median donation interval for women goes from 158.0 to 127.0 days.
-Number of blood bank visits increases by 18%.

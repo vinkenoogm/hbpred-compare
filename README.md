@@ -1,9 +1,10 @@
 [![Python Version](https://img.shields.io/badge/Python-3.10-blue)](https://python.org)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7780718.svg)](https://doi.org/10.5281/zenodo.7780718)
 
 This repository contains the code used to obtain the results that are described
 in the scientific article "The added value of ferritin levels and genetic markers 
 for the prediction of hemoglobin deferral" (to be submitted soon). 
-The repository has been indexed on [Zenodo].
+The repository has been indexed on [Zenodo](https://doi.org/10.5281/zenodo.7780718).
 
 
 ## Data 
@@ -165,4 +166,3 @@ This script anonymizes SHAP values so that no individual level information is pr
 In this notebook, summary plots for the SHAP values calculated by
 `calcshap.py` or `anonshap.py` are created and saved in `results/{country}/plots_shap/`.
 
-[Zenodo]: 

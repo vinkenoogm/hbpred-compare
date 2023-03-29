@@ -1,5 +1,3 @@
-# SVM-hb-NL
-
 [![Python Version](https://img.shields.io/badge/Python-3.10-blue)](https://python.org)
 
 This repository contains the code used to obtain the results that are described

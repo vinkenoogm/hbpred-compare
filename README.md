@@ -31,20 +31,38 @@ submodels (SVM-1 through SVM-5) are trained separately for men and
 women, resulting in ten models total. The number in the model name indicates how
 many previous Hb measurements are used in the prediction. As donors can only be
 included in SVM-n if they have at least n previous visits, sample sizes decrease
-from SVM-1 to SVM-5. The following predictor variables are used:
+from SVM-1 to SVM-5. The following predictor variables are used.
 
-Variable	 | Unit or values |	Description
+For both countries:
+
+Variable	   | Unit or values |	Description
 -------------|----------------|----------------------------------------------------------------------------------------------
 Sex	         | {male, female} |	Biological sex of the donor; separate models are trained for men and women
 Age          | years          |	Donor age at time of donation
 Time         | hours          |	Registration time when the donor arrived at the blood bank
 Month        | {1-12}         |	Month of the year that the visit took place
 NumDon       | count          |	Number of successful (collected volume > 250 mL) whole-blood donations in the last 24 months
-FerritinPrev | ng/mL          |	Most recent ferritin level measured in this donor
-DaysSinceFer | days           |	Time since this donor’s last ferritin measurement
 HbPrevn      | mmol/L         |	Hemoglobin level at nth previous visit, for n between 1-5
 DaysSinceHbn | days	          | Time since related Hb measurement at nth previous visit, for n between 1-5
 
+Additional for Dutch data:
+
+Variable	   | Unit or values |	Description
+-------------|----------------|----------------------------------------------------------------------------------------------
+FerritinPrev | ng/mL          |	Most recent ferritin level measured in this donor
+DaysSinceFer | days           |	Time since this donor’s last ferritin measurement
+
+Additional for Finnish data:
+
+Variable	       | Unit or values |	Description
+-----------------|----------------|----------------------------------------------------------------------------------------------
+snp_1_169549811  | {0, 1, 2}      |	Number of minor alleles in SNP rs6025 
+snp_6_32617727   | {0, 1, 2}      | Number of minor alleles in SNP rs3129761
+snp_15_45095352  | {0, 1, 2}      | Number of minor alleles in SNP rs199138
+snp_17_58358769  | {0, 1, 2}      | Number of minor alleles in SNP rs199598395
+prs_anemia       |                |	Polygenic risk score for anemia
+prs_ferritin     |                |	Polygenic risk score for ferritin
+prs_hemoglobin   |                |	Polygenic risk score for hemoglobin
 
 ## Files
 `run_full_analysis.py` calls all other scripts and carries out the entire analysis for any given combination of data and variables. The scripts use the following arguments:

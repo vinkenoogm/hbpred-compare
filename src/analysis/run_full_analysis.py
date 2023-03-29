@@ -1,6 +1,6 @@
-import preprocessing_netherlands
+# import preprocessing_netherlands
 # import preprocessing_finland
-import hyperparams
+import hyperparams 
 import modeltraining
 import modelperformance
 import calcshap
@@ -14,6 +14,7 @@ from datetime import datetime
 from itertools import product
 from multiprocessing import Pool
 
+
 def main():
     firststart = datetime.now().replace(microsecond=0)
     
@@ -25,7 +26,7 @@ def main():
     
     options_shap = {'nback': [1,2,3,4,5], 
                    'sex': ['men','women'], 
-                   'n': [100],
+                   'n': [500],
                    'foldersuffix': ['', '_hbonly']}
     combs_shap = [x for x in product(*options_shap.values())]
     list_args_shap = [Namespace(**dict(zip(options_shap.keys(), p))) for p in combs_shap]    
@@ -88,17 +89,6 @@ def main():
         now = datetime.now().replace(microsecond=0)
         print(f'SHAP values for all models are calculated and saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
     
-    if shap_plots:
-        # Creating SHAP value plots
-        start = datetime.now().replace(microsecond=0)
-        print(f'Making plots for SHAP values. \n--Started at: {start}')
-
-        with Pool(len(list_args_shap)) as pool:
-            results = pool.map(plotshap.main, list_args_shap)
-
-        now = datetime.now().replace(microsecond=0)
-        print(f'All SHAP plots saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
-        
     if shap_anon:
         # Anonymizing SHAP values
         start = datetime.now().replace(microsecond=0)
@@ -109,6 +99,17 @@ def main():
 
         now = datetime.now().replace(microsecond=0)
         print(f'SHAP values for all models are anonymized and saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
+        
+    if shap_plots:
+        # Creating SHAP value plots
+        start = datetime.now().replace(microsecond=0)
+        print(f'Making plots for SHAP values. \n--Started at: {start}')
+
+        with Pool(len(list_args_shap)) as pool:
+            results = pool.map(plotshap.main, list_args_shap)
+
+        now = datetime.now().replace(microsecond=0)
+        print(f'All SHAP plots saved. \n--Time elapsed: {now - start} \n--Total time elapsed: {now - firststart}\n')
 
     if changing_time:
         # Predictions at different timepoints
@@ -138,9 +139,7 @@ if __name__ == '__main__':
     model_training = True
     model_performance = True
     shap_values = True
-    shap_plots = True
     shap_anon = True
-    changing_time = True
-    impact_bloodsupply = True
+    shap_plots = True
     main()
 

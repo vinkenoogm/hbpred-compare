@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import precision_recall_curve, average_precision_score
 
-data_path = Path('../../data')
+data_path = Path('../../data/NL')
 results_path = Path('../../results/netherlands')
 
 def parse_args():
@@ -126,6 +126,32 @@ def plot_prs(probas, def_f, def_m, save=False):
         plot_path = results_path / 'plots_performance/'
         plot_path.mkdir(parents=True, exist_ok=True)
         plt.savefig(plot_path / f'{save}.png')
+        
+def pred_by_snp(args):
+    for sex, nback in product(['men', 'women'], range(1, 6)):
+        clf = pickle.load(open(results_path / f'models{args.foldersuffix}/clf_{sex}_{nback}.sav', 'rb'))
+        test = pd.read_pickle(data_path / f'scaled{args.foldersuffix}/{sex}_{nback}_test.pkl')
+        y_pred = clf.predict(test[test.columns[:-1]])
+        
+        output_path = results_path / f'models{args.foldersuffix}'
+        output_path.mkdir(parents=True, exist_ok=True)
+        test2 = pd.read_pickle(data_path / f'scaled/{sex}_{nback}_test.pkl')
+        test2['HbOK_pred'] = y_pred
+        df_save = test2[['snp_1_169549811', 'snp_6_32617727', 'snp_15_45095352', 'snp_17_58358769', 'HbOK', 'HbOK_pred']]
+        df_save.to_pickle(output_path / f'preds_{sex}_{nback}.pkl')
+        
+def pred_by_ferr(args):
+    for sex, nback in product(['men', 'women'], range(1, 6)):
+        clf = pickle.load(open(results_path / f'models{args.foldersuffix}/clf_{sex}_{nback}.sav', 'rb'))
+        test = pd.read_pickle(data_path / f'scaled{args.foldersuffix}/{sex}_{nback}_test.pkl')
+        y_pred = clf.predict(test[test.columns[:-1]])
+        
+        output_path = results_path / f'models{args.foldersuffix}'
+        output_path.mkdir(parents=True, exist_ok=True)
+        test2 = pd.read_pickle(data_path / f'scaled/{sex}_{nback}_test.pkl')
+        test2['HbOK_pred'] = y_pred
+        df_save = test2[['FerritinPrev', 'HbOK', 'HbOK_pred']]
+        df_save.to_pickle(output_path / f'preds_{sex}_{nback}.pkl')
     
 def main(args):
     res_df = pretty_results([f'res_{sex}_{nback}' for sex in ['men','women'] for nback in range(1,6)], args)
@@ -157,3 +183,13 @@ def main(args):
 
     probas = load_probas(args)
     plot_prs(probas, def_f, def_m, save=f'PR_curve{args.foldersuffix}')
+    
+    # Use below for Finnish data
+    # pred_by_snp(args)
+    
+    # Use below for Dutch data
+    pred_by_ferr(args)
+    
+if __name__ == '__main__':
+    args = parse_args()
+    main(args)

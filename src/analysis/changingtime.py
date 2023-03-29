@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
-data_path = Path('../../data')
-result_path = Path('../../results/netherlands')
+data_path = Path('../../data/NL_timefirstdon')
+result_path = Path('../../results/netherlands_timefirstdon')
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -43,7 +43,7 @@ def main(args):
 
     timecols = []
     if args.foldersuffix == '':
-        timecols.extend(['DaysSinceFer'])
+        timecols.extend(['DaysSinceFirstDon'])
     for n in range(1, args.nback+1):
         timecols.extend(['DaysSinceHb'+str(n)])
 

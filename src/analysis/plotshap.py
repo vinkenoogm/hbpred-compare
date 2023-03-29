@@ -38,10 +38,10 @@ def main(args):
         df_x[varname] = list(shapdf.loc[shapdf['variable'] == varname, 'value'])
 
     plt.figure(figsize=(8, 8))
-    fig = shap.summary_plot(df_shap.to_numpy(), df_x, max_display=50, show=False)
+    fig = shap.summary_plot(df_shap.to_numpy(), df_x, max_display=50, show=False, cmap='viridis')
     plt.gcf().axes[-1].set_aspect(100)
     plt.gcf().axes[-1].set_box_aspect(100)
-    plt.title(f'SHAP values for SVM-{args.nback}, {args.sex}')
+    plt.title(f"SHAP values for SVM-{'f' if args.sex == 'women' else 'm'}-{args.nback}, {'full' if args.foldersuffix == '' else 'reduced'} model")
     plt.savefig(plot_path / f'shapvals_{args.sex}_{args.nback}{args.foldersuffix}.png', bbox_inches='tight')
     plt.close()
     
